@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Vyuha Finance">
+    <meta name="theme-color" content="#6366f1">
+    <title>Vyuha Finance - Personal Money Manager</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%236366f1' rx='20'/%3E%3Cpath d='M30 30 L70 70 M70 30 L30 70' stroke='white' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%236366f1' rx='20'/%3E%3Cpath d='M30 30 L70 70 M70 30 L30 70' stroke='white' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --gray: #6b7280;
+            --border: #e5e7eb;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.5;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* App Shell */
+        #app {
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: var(--white);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1rem 1rem 2rem;
+            position: relative;
+            border-radius: 0 0 30px 30px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .balance-card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-top: 1rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .balance-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .balance-amount {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-top: 0.25rem;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Sections */
+        section {
+            padding: 1.5rem 1rem;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Quick Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-top: 0.25rem;
+        }
+
+        .stat-positive { color: var(--success); }
+        .stat-negative { color: var(--danger); }
+
+        /* Buttons */
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.96);
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: var(--white);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: var(--white);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Lists */
+        .list-container {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .list-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--dark);
+            background: var(--light);
+        }
+
+        .list-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.1s;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item:hover {
+            background: #fafafa;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--dark);
+        }
+
+        .item-subtitle {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 0.15rem;
+        }
+
+        .item-amount {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .amount-income { color: var(--success); }
+        .amount-expense { color: var(--danger); }
+
+        .item-date {
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-left: auto;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--gray);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            opacity: 0.3;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray);
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-actions {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        /* Trip Split */
+        .split-person {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--light);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        .split-person input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        /* Calculator */
+        .calc-result {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .calc-big-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .calc-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 1.5rem;
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .fab:active {
+            transform: scale(0.9);
+        }
+
+        .fab-menu {
+            position: fixed;
+            bottom: 8rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 0.75rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 499;
+        }
+
+        .fab-menu.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .fab-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .fab-add { background: var(--success); }
+        .fab-trip { background: var(--secondary); }
+        .fab-calc { background: var(--warning); }
+
+        /* Chip */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: var(--light);
+            color: var(--gray);
+        }
+
+        .chip-income { background: #dcfce7; color: var(--success); }
+        .chip-expense { background: #fee2e2; color: var(--danger); }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: var(--border);
+            color: var(--gray);
+        }
+
+        /* Install Prompt */
+        .install-banner {
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .install-banner button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Savings Goals */
+        .goal-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .goal-title {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .goal-progress {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .goal-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .goal-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .goal-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .goal-stat-value {
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .goal-stat-label {
+            color: var(--gray);
+        }
+
+        /* Date picker styling */
+        input[type="date"] {
+            font-size: 0.95rem;
+        }
+
+        /* Toggle switches */
+        .toggle-group {
+            display: flex;
+            background: var(--light);
+            border-radius: 8px;
+            padding: 0.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        .toggle-btn.active {
+            background: var(--white);
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Textarea */
+        .form-textarea {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        @media (max-width: 480px) {
+            header { padding: 1rem 1rem 1.5rem; }
+            .balance-amount { font-size: 1.75rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1>Vyuha Finance</h1>
+                    <div class="subtitle">Personal Money Manager</div>
+                </div>
+                <div id="current-date" class="subtitle"></div>
+            </div>
+            <div class="balance-card">
+                <div class="balance-label">Total Balance</div>
+                <div class="balance-amount" id="main-balance">$0.00</div>
+            </div>
+        </header>
+
+        <nav>
+            <a href="#" class="nav-item active" onclick="showSection('dashboard', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('transactions', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <span>Transactions</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('savings', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C2 7 2 17 12 22s10-10 10-15c0-3-2.5-5.5-5-7-2.5 1.5-5 4-5 7v4"></path></svg>
+                <span>Savings</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('trips', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19V14c0-2 1.5-3 3-3s3 1 3 3v5l-4-3-4 3z"></path><line x1="7" y1="20" x2="11" y2="20"></line></svg>
+                <span>Trips</span>
+            </a>
+        </nav>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="active">
+            <div class="install-banner" id="install-banner" style="display:none;">
+                <span>Install Vyuha Finance on your home screen</span>
+                <button onclick="installPWA()">Install</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value stat-positive" id="stat-income">$0.00</div>
+                    <div class="stat-label">Income (30 days)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value stat-negative" id="stat-expense">$0.00</div>
+                    <div class="stat-label">Expenses (30 days)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value stat-positive" id="stat-savings">$0.00</div>
+                    <div class="stat-label">Savings Balance</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-goals">0</div>
+                    <div class="stat-label">Active Goals</div>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="openTransactionModal()">Add Transaction</button>
+
+            <div class="list-container">
+                <div class="list-header">Recent Transactions</div>
+                <div id="recent-transactions" class="list-container-inner">
+                    <!-- transactions injected here -->
+                </div>
+            </div>
+
+            <div class="empty-state" id="empty-dashboard" style="display:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <h3>No transactions yet</h3>
+                <p>Add your first transaction to get started</p>
+            </div>
+        </section>
+
+        <!-- Transactions Section -->
+        <section id="transactions">
+            <div class="toggle-group">
+                <button class="toggle-btn active" onclick="filterTransactions('all')">All</button>
+                <button class="toggle-btn" onclick="filterTransactions('income')">Income</button>
+                <button class="toggle-btn" onclick="filterTransactions('expense')">Expenses</button>
+            </div>
+
+            <button class="btn-primary" onclick="openTransactionModal()">+ Add Transaction</button>
+
+            <div class="list-container">
+                <div class="list-header">Transaction History</div>
+                <div id="transactions-list">
+                    <!-- injected -->
+                </div>
+            </div>
+
+            <div class="empty-state" id="empty-transactions" style="display:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="20" x2="12" y2="4"></line><polyline points="18 4 12 8 6 4"></line><path d="M17 19v2a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-2"></path></svg>
+                <h3>No transactions</h3>
+                <p>Start logging your income and expenses</p>
+            </div>
+        </section>
+
+        <!-- Savings Section -->
+        <section id="savings">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value stat-positive" id="stat-total-savings">$0.00</div>
+                    <div class="stat-label">Total Saved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-goal-count">0</div>
+                    <div class="stat-label">Goals Created</div>
+                </div>
+            </div>
+
+            <div class="toggle-group">
+                <button class="toggle-btn active" onclick="filterGoals('all')">All Goals</button>
+                <button class="toggle-btn" onclick="filterGoals('active')">Active</button>
+                <button class="toggle-btn" onclick="filterGoals('completed')">Completed</button>
+            </div>
+
+            <button class="btn-primary" onclick="openSavingsModal()">+ Create Savings Goal</button>
+
+            <div id="goals-list">
+                <!-- injected -->
+            </div>
+
+            <div class="empty-state" id="empty-savings" style="display:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C2 7 2 17 12 22s10-10 10-15c0-3-2.5-5.5-5-7-2.5 1.5-5 4-5 7v4"></path></svg>
+                <h3>No savings goals</h3>
+                <p>Create your first savings goal</p>
+            </div>
+        </section>
+
+        <!-- Trips Section -->
+        <section id="trips">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-trip-count">0</div>
+                    <div class="stat-label">Total Trips</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value stat-negative" id="stat-trip-balance">$0.00</div>
+                    <div class="stat-label">Net Balance</div>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="openTripModal()">+ Create Trip</button>
+
+            <div id="trips-list">
+                <!-- injected -->
+            </div>
+
+            <div class="empty-state" id="empty-trips" style="display:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 19V14c0-2 1.5-3 3-3s3 1 3 3v5l-4-3-4 3z"></path><line x1="7" y1="20" x2="11" y2="20"></line></svg>
+                <h3>No trips planned</h3>
+                <p>Create your first trip to split expenses</p>
+            </div>
+        </section>
+
+        <!-- Floating Action Button -->
+        <button class="fab" id="fab" onclick="toggleFabMenu()">+</button>
+        <div class="fab-menu" id="fab-menu">
+            <button class="fab-btn fab-add" onclick="openTransactionModal(); toggleFabMenu()">Transaction</button>
+            <button class="fab-btn fab-trip" onclick="openTripModal(); toggleFabMenu()">Trip</button>
+            <button class="fab-btn fab-calc" onclick="openCalcModal(); toggleFabMenu()">Calculator</button>
+        </div>
+
+        <!-- Modals -->
+        
+        <!-- Transaction Modal -->
+        <div class="modal-overlay" id="tx-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title" id="tx-modal-title">Add Transaction</div>
+                    <button class="modal-close" onclick="closeModal('tx-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Type</label>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" id="tx-type-income" onclick="setTxType('income')">Income</button>
+                            <button class="toggle-btn" id="tx-type-expense" onclick="setTxType('expense')">Expense</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount ($)</label>
+                        <input type="number" id="tx-amount" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="tx-category">
+                            <option value="Food">Food & Dining</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Bills">Bills & Utilities</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Health">Healthcare</option>
+                            <option value="Salary">Salary</option>
+                            <option value="Freelance">Freelance</option>
+                            <option value="Investment">Investment</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" id="tx-description" placeholder="e.g. Grocery shopping">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" id="tx-date">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal('tx-modal')">Cancel</button>
+                    <button class="btn-primary" onclick="saveTransaction()">Save Transaction</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Savings Goal Modal -->
+        <div class="modal-overlay" id="savings-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title">Create Savings Goal</div>
+                    <button class="modal-close" onclick="closeModal('savings-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Goal Name</label>
+                        <input type="text" id="goal-name" placeholder="e.g. New Laptop, Vacation">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Amount ($)</label>
+                        <input type="number" id="goal-target" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Current Saved ($)</label>
+                        <input type="number" id="goal-current" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Date</label>
+                        <input type="date" id="goal-date">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal('savings-modal')">Cancel</button>
+                    <button class="btn-primary" onclick="saveSavingsGoal()">Create Goal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchase Calculator Modal -->
+        <div class="modal-overlay" id="calc-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title">Purchase Savings Calculator</div>
+                    <button class="modal-close" onclick="closeModal('calc-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Item Name</label>
+                        <input type="text" id="calc-item" placeholder="e.g. MacBook Pro">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Item Cost ($)</label>
+                        <input type="number" id="calc-cost" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Already Saved ($)</label>
+                        <input type="number" id="calc-saved" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Savings ($)</label>
+                        <input type="number" id="calc-monthly" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="calc-result" id="calc-result" style="display:none;">
+                        <div class="calc-label">Amount Still Needed</div>
+                        <div class="calc-big-number" id="calc-needed">$0.00</div>
+                        <div class="calc-label" id="calc-months-label">Months to reach goal</div>
+                        <div class="calc-big-number" id="calc-months">0</div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal('calc-modal')">Close</button>
+                    <button class="btn-primary" onclick="calculatePurchase()">Calculate</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trip Modal -->
+        <div class="modal-overlay" id="trip-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title">Create Trip</div>
+                    <button class="modal-close" onclick="closeModal('trip-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Trip Name</label>
+                        <input type="text" id="trip-name" placeholder="e.g. Goa Weekend">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Destination</label>
+                        <input type="text" id="trip-destination" placeholder="e.g. Goa, India">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" id="trip-start">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">End Date</label>
+                        <input type="date" id="trip-end">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Travelers (comma-separated names)</label>
+                        <input type="text" id="trip-travelers" placeholder="e.g. Manjeet, Sarah, Raj">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal('trip-modal')">Cancel</button>
+                    <button class="btn-primary" onclick="saveTrip()">Create Trip</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trip Detail Modal (shown when trip selected) -->
+        <div class="modal-overlay" id="trip-detail-modal">
+            <div class="modal" style="max-width: 450px;">
+                <div class="modal-header">
+                    <div class="modal-title" id="trip-detail-title">Trip Details</div>
+                    <button class="modal-close" onclick="closeModal('trip-detail-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Total Expenses</label>
+                        <div class="stat-value" id="trip-total-expenses">$0.00</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Total Contributions</label>
+                        <div class="stat-value" id="trip-total-paid">$0.00</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Balance</label>
+                        <div class="stat-value" id="trip-net-balance">$0.00</div>
+                    </div>
+
+                    <h4 style="margin: 1.5rem 0 0.5rem; font-size: 0.9rem; color: var(--gray);">Add Expense</h4>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" id="trip-exp-desc" placeholder="e.g. Hotel, Dinner">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount ($)</label>
+                        <input type="number" id="trip-exp-amount" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Paid By</label>
+                        <select class="form-select" id="trip-exp-paidby"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Split Among</label>
+                        <div id="trip-exp-split"></div>
+                    </div>
+                    <div class="modal-actions" style="margin-top: 1rem;">
+                        <button class="btn-primary" style="width:100%" onclick="addTripExpense()">Add Expense</button>
+                    </div>
+
+                    <h4 style="margin: 2rem 0 0.5rem; font-size: 0.9rem; color: var(--gray);">Settle Up</h4>
+                    <div id="trip-settlements"></div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal('trip-detail-modal')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div class="toast" id="toast"></div>
+    </div>
+
+    <script>
+        // Database initialization
+        const DB_NAME = 'vyuha-finance-db';
+        const DB_VERSION = 1;
+        let db;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    
+                    // Transactions store
+                    if (!database.objectStoreNames.contains('transactions')) {
+                        const txStore = database.createObjectStore('transactions', { keyPath: 'id', autoIncrement: true });
+                        txStore.createIndex('date', 'date', { unique: false });
+                        txStore.createIndex('type', 'type', { unique: false });
+                        txStore.createIndex('category', 'category', { unique: false });
+                    }
+                    
+                    // Savings goals store
+                    if (!database.objectStoreNames.contains('savings')) {
+                        const goalStore = database.createObjectStore('savings', { keyPath: 'id', autoIncrement: true });
+                        goalStore.createIndex('targetDate', 'targetDate', { unique: false });
+                    }
+                    
+                    // Trips store
+                    if (!database.objectStoreNames.contains('trips')) {
+                        database.createObjectStore('trips', { keyPath: 'id', autoIncrement: true });
+                    }
+                    
+                    // Trip expenses store
+                    if (!database.objectStoreNames.contains('tripExpenses')) {
+                        database.createObjectStore('tripExpenses', { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+            });
+        }
+
+        // Initialize app
+        let currentTxType = 'income';
+        let selectedTripId = null;
+        let deferredPrompt = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initDB();
+            updateDate();
+            loadDashboard();
+            setupInstallPrompt();
+            
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tx-date').value = today;
+            document.getElementById('trip-start').value = today;
+            document.getElementById('trip-end').value = today;
+        });
+
+        function updateDate() {
+            const now = new Date();
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        function showSection(sectionId, element) {
+            // Hide all sections
+            document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Update nav
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if (element) element.classList.add('active');
+            
+            // Load section data
+            if (sectionId === 'dashboard') loadDashboard();
+            if (sectionId === 'transactions') loadTransactions();
+            if (sectionId === 'savings') loadSavings();
+            if (sectionId === 'trips') loadTrips();
+        }
+
+        // ============ TRANSACTIONS ============
+        
+        function setTxType(type) {
+            currentTxType = type;
+            document.getElementById('tx-type-income').classList.toggle('active', type === 'income');
+            document.getElementById('tx-type-expense').classList.toggle('active', type === 'expense');
+        }
+
+        function openTransactionModal() {
+            currentTxType = 'income';
+            setTxType('income');
+            document.getElementById('tx-amount').value = '';
+            document.getElementById('tx-description').value = '';
+            document.getElementById('tx-category').value = 'Food';
+            document.getElementById('tx-modal-title').textContent = 'Add Transaction';
+            document.getElementById('tx-modal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        async function saveTransaction() {
+            const amount = parseFloat(document.getElementById('tx-amount').value);
+            const description = document.getElementById('tx-description').value;
+            const category = document.getElementById('tx-category').value;
+            const date = document.getElementById('tx-date').value;
+            const type = currentTxType;
+
+            if (!amount || !description || !date) {
+                showToast('Please fill in all fields');
+                return;
+            }
+
+            const transaction = {
+                amount,
+                description,
+                category,
+                date,
+                type,
+                createdAt: new Date().toISOString()
+            };
+
+            const transactionStore = db.transaction(['transactions'], 'readwrite').objectStore('transactions');
+            await transactionStore.add(transaction);
+            
+            closeModal('tx-modal');
+            showToast('Transaction saved!');
+            loadDashboard();
+            loadTransactions();
+        }
+
+        function filterTransactions(type) {
+            document.querySelectorAll('.toggle-group button').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            loadTransactions(type);
+        }
+
+        async function loadTransactions(filter = 'all') {
+            const txStore = db.transaction(['transactions'], 'readonly').objectStore('transactions');
+            const allTx = await new Promise((resolve) => {
+                const request = txStore.getAll();
+                request.onsuccess = () => resolve(request.sort((a, b) => new Date(b.date) - new Date(a.date)));
+            });
+
+            const filtered = filter === 'all' ? allTx : allTx.filter(t => t.type === filter);
+            
+            const container = document.getElementById('transactions-list');
+            const emptyState = document.getElementById('empty-transactions');
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            container.innerHTML = filtered.map(tx => `
+                <div class="list-item">
+                    <div class="item-info">
+                        <div class="item-title">${escapeHtml(tx.description)}</div>
+                        <div class="item-subtitle">${tx.category} • ${formatDate(tx.date)}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="item-amount ${tx.type === 'income' ? 'amount-income' : 'amount-expense'}">
+                            ${tx.type === 'income' ? '+' : '-'}$${tx.amount.toFixed(2)}
+                        </div>
+                        <div class="chip chip-${tx.type}">${tx.type}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadDashboard() {
+            const txStore = db.transaction(['transactions'], 'readonly').objectStore('transactions');
+            const allTx = await new Promise((resolve) => {
+                const request = txStore.getAll();
+                request.onsuccess = () => resolve(request);
+            });
+
+            const now = new Date();
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            
+            let income = 0, expense = 0;
+            allTx.forEach(tx => {
+                const txDate = new Date(tx.date);
+                if (txDate >= thirtyDaysAgo) {
+                    if (tx.type === 'income') income += tx.amount;
+                    else expense += tx.amount;
+                }
+            });
+
+            document.getElementById('stat-income').textContent = '$' + income.toFixed(2);
+            document.getElementById('stat-expense').textContent = '$' + expense.toFixed(2);
+            
+            // Savings total
+            const goalStore = db.transaction(['savings'], 'readonly').objectStore('savings');
+            const goals = await new Promise((resolve) => {
+                const request = goalStore.getAll();
+                request.onsuccess = () => resolve(request);
+            });
+            const totalSavings = goals.reduce((sum, g) => sum + (g.current || 0), 0);
+            document.getElementById('stat-savings').textContent = '$' + totalSavings.toFixed(2);
+            document.getElementById('main-balance').textContent = '$' + (income - expense + totalSavings).toFixed(2);
+            document.getElementById('stat-goals').textContent = goals.length;
+
+            // Recent transactions (last 5)
+            const recent = allTx.slice(0, 5);
+            const container = document.getElementById('recent-transactions');
+            const emptyState = document.getElementById('empty-dashboard');
+
+            if (recent.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            container.innerHTML = recent.map(tx => `
+                <div class="list-item">
+                    <div class="item-info">
+                        <div class="item-title">${escapeHtml(tx.description)}</div>
+                        <div class="item-subtitle">${tx.category} • ${formatDate(tx.date)}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="item-amount ${tx.type === 'income' ? 'amount-income' : 'amount-expense'}">
+                            ${tx.type === 'income' ? '+' : '-'}$${tx.amount.toFixed(2)}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============ SAVINGS GOALS ============
+        
+        function openSavingsModal() {
+            document.getElementById('goal-name').value = '';
+            document.getElementById('goal-target').value = '';
+            document.getElementById('goal-current').value = '';
+            document.getElementById('goal-date').value = '';
+            document.getElementById('savings-modal').classList.add('active');
+        }
+
+        async function saveSavingsGoal() {
+            const name = document.getElementById('goal-name').value;
+            const target = parseFloat(document.getElementById('goal-target').value);
+            const current = parseFloat(document.getElementById('goal-current').value) || 0;
+            const targetDate = document.getElementById('goal-date').value;
+
+            if (!name || !target || !targetDate) {
+                showToast('Please fill in all fields');
+                return;
+            }
+
+            const goal = {
+                name,
+                target,
+                current,
+                targetDate,
+                createdAt: new Date().toISOString()
+            };
+
+            const goalStore = db.transaction(['savings'], 'readwrite').objectStore('savings');
+            await goalStore.add(goal);
+            
+            closeModal('savings-modal');
+            showToast('Savings goal created!');
+            loadSavings();
+            loadDashboard();
+        }
+
+        async function loadSavings(filter = 'all') {
+            const goalStore = db.transaction(['savings'], 'readonly').objectStore('savings');
+            const allGoals = await new Promise((resolve) => {
+                const request = goalStore.getAll();
+                request.onsuccess = () => resolve(request);
+            });
+
+            const now = new Date().toISOString().split('T')[0];
+            let filtered = allGoals;
+            if (filter === 'active') filtered = allGoals.filter(g => g.current < g.target);
+            if (filter === 'completed') filtered = allGoals.filter(g => g.current >= g.target);
+
+            const container = document.getElementById('goals-list');
+            const emptyState = document.getElementById('empty-savings');
+            
+            // Update stat
+            document.getElementById('stat-total-savings').textContent = '$' + allGoals.reduce((sum, g) => sum + (g.current || 0), 0).toFixed(2);
+            document.getElementById('stat-goal-count').textContent = allGoals.length;
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            container.innerHTML = filtered.map(goal => {
+                const progress = Math.min((goal.current / goal.target) * 100, 100);
+                const remaining = goal.target - goal.current;
+                return `
+                <div class="goal-card">
+                    <div class="goal-header">
+                        <div class="goal-title">${escapeHtml(goal.name)}</div>
+                        <div>$${goal.current.toFixed(2)} / $${goal.target.toFixed(2)}</div>
+                    </div>
+                    <div class="goal-progress">
+                        <div class="goal-progress-bar" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="goal-stats">
+                        <div class="goal-stat">
+                            <div class="goal-stat-value">$${remaining.toFixed(2)}</div>
+                            <div class="goal-stat-label">Remaining</div>
+                        </div>
+                        <div class="goal-stat">
+                            <div class="goal-stat-value">${progress.toFixed(0)}%</div>
+                            <div class="goal-stat-label">Progress</div>
+                        </div>
+                        <div class="goal-stat">
+                            <div class="goal-stat-value">${goal.targetDate || '—'}</div>
+                            <div class="goal-stat-label">Target Date</div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function filterGoals(type) {
+            document.querySelectorAll('#savings .toggle-group button').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            loadSavings(type);
+        }
+
+        // ============ PURCHASE CALCULATOR ============
+        
+        function openCalcModal() {
+            document.getElementById('calc-item').value = '';
+            document.getElementById('calc-cost').value = '';
+            document.getElementById('calc-saved').value = '';
+            document.getElementById('calc-monthly').value = '';
+            document.getElementById('calc-result').style.display = 'none';
+            document.getElementById('calc-modal').classList.add('active');
+        }
+
+        function calculatePurchase() {
+            const cost = parseFloat(document.getElementById('calc-cost').value) || 0;
+            const saved = parseFloat(document.getElementById('calc-saved').value) || 0;
+            const monthly = parseFloat(document.getElementById('calc-monthly').value) || 0;
+
+            const needed = Math.max(0, cost - saved);
+            const resultDiv = document.getElementById('calc-result');
+            const neededEl = document.getElementById('calc-needed');
+            const monthsEl = document.getElementById('calc-months');
+            const monthsLabel = document.getElementById('calc-months-label');
+
+            neededEl.textContent = '$' + needed.toFixed(2);
+
+            if (monthly > 0) {
+                const months = Math.ceil(needed / monthly);
+                monthsEl.textContent = months;
+                monthsLabel.textContent = months === 1 ? 'Month to reach goal' : 'Months to reach goal';
+            } else {
+                monthsEl.textContent = '∞';
+                monthsLabel.textContent = 'Set monthly savings to see timeline';
+            }
+
+            resultDiv.style.display = 'block';
+        }
+
+        // ============ TRIPS ============
+        
+        function openTripModal() {
+            document.getElementById('trip-name').value = '';
+            document.getElementById('trip-destination').value = '';
+            document.getElementById('trip-start').value = '';
+            document.getElementById('trip-end').value = '';
+            document.getElementById('trip-travelers').value = '';
+            document.getElementById('trip-modal').classList.add('active');
+        }
+
+        async function saveTrip() {
+            const name = document.getElementById('trip-name').value;
+            const destination = document.getElementById('trip-destination').value;
+            const startDate = document.getElementById('trip-start').value;
+            const endDate = document.getElementById('trip-end').value;
+            const travelersInput = document.getElementById('trip-travelers').value;
+
+            if (!name || !travelersInput) {
+                showToast('Please enter trip name and travelers');
+                return;
+            }
+
+            const travelers = travelersInput.split(',').map(t => t.trim()).filter(t => t);
+
+            const trip = {
+                name,
+                destination,
+                startDate,
+                endDate,
+                travelers,
+                createdAt: new Date().toISOString()
+            };
+
+            const tripStore = db.transaction(['trips'], 'readwrite').objectStore('trips');
+            const result = await new Promise((resolve) => {
+                const request = tripStore.add(trip);
+                request.onsuccess = () => resolve(request.result);
+            });
+
+            closeModal('trip-modal');
+            showToast('Trip created!');
+            loadTrips();
+        }
+
+        async function loadTrips() {
+            const tripStore = db.transaction(['trips'], 'readonly').objectStore('trips');
+            const allTrips = await new Promise((resolve) => {
+                const request = tripStore.getAll();
+                request.onsuccess = () => resolve(request.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+            });
+
+            // Also load expenses for each trip to calculate balance
+            const expStore = db.transaction(['tripExpenses'], 'readonly').objectStore('tripExpenses');
+            const allExpenses = await new Promise((resolve) => {
+                const request = expStore.getAll();
+                request.onsuccess = () => resolve(request);
+            });
+
+            const container = document.getElementById('trips-list');
+            const emptyState = document.getElementById('empty-trips');
+
+            if (allTrips.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            
+            document.getElementById('stat-trip-count').textContent = allTrips.length;
+
+            let netBalance = 0;
+            container.innerHTML = allTrips.map(trip => {
+                const tripExpenses = allExpenses.filter(e => e.tripId === trip.id);
+                const totalExpenses = tripExpenses.reduce((sum, e) => sum + e.amount, 0);
+                
+                // Calculate what each person paid
+                const personPaid = {};
+                trip.travelers.forEach(p => personPaid[p] = 0);
+                tripExpenses.forEach(e => {
+                    personPaid[e.paidBy] = (personPaid[e.paidBy] || 0) + e.amount;
+                });
+
+                const perPersonShare = totalExpenses / trip.travelers.length;
+                
+                let tripNet = 0;
+                const settlements = [];
+                trip.travelers.forEach(person => {
+                    const paid = personPaid[person] || 0;
+                    const balance = paid - perPersonShare;
+                    tripNet += Math.abs(balance);
+                    if (balance > 0) {
+                        settlements.push(`${person} receives $${balance.toFixed(2)}`);
+                    } else if (balance < 0) {
+                        settlements.push(`${person} owes $${Math.abs(balance).toFixed(2)}`);
+                    }
+                });
+                netBalance += tripNet;
+
+                return `
+                <div class="list-item" onclick="openTripDetail(${trip.id})">
+                    <div class="item-info">
+                        <div class="item-title">${escapeHtml(trip.name)}</div>
+                        <div class="item-subtitle">${trip.destination} • ${formatDate(trip.startDate)} to ${formatDate(trip.endDate)}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="item-amount">$${totalExpenses.toFixed(2)}</div>
+                        <div style="font-size: 0.75rem; color: var(--gray);">${trip.travelers.length} travelers</div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            document.getElementById('stat-trip-balance').textContent = '$' + netBalance.toFixed(2);
+        }
+
+        function openTripDetail(tripId) {
+            selectedTripId = tripId;
+            
+            const tripStore = db.transaction(['trips'], 'readonly').objectStore('trips');
+            const request = tripStore.get(tripId);
+            request.onsuccess = () => {
+                const trip = request.result;
+                document.getElementById('trip-detail-title').textContent = trip.name;
+                
+                // Populate paid-by dropdown
+                const paidBySelect = document.getElementById('trip-exp-paidby');
+                const splitContainer = document.getElementById('trip-exp-split');
+                paidBySelect.innerHTML = '';
+                splitContainer.innerHTML = '';
+                
+                trip.travelers.forEach(person => {
+                    const option = document.createElement('option');
+                    option.value = person;
+                    option.textContent = person;
+                    paidBySelect.appendChild(option);
+                    
+                    const label = document.createElement('label');
+                    label.style.display = 'flex';
+                    label.style.alignItems = 'center';
+                    label.style.gap = '0.5rem';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = true;
+                    checkbox.value = person;
+                    
+                    const span = document.createElement('span');
+                    span.textContent = person;
+                    
+                    label.appendChild(checkbox);
+                    label.appendChild(span);
+                    splitContainer.appendChild(label);
+                });
+                
+                loadTripDetailData(tripId);
+                document.getElementById('trip-detail-modal').classList.add('active');
+            };
+        }
+
+        async function loadTripDetailData(tripId) {
+            const expStore = db.transaction(['tripExpenses'], 'readonly').objectStore('tripExpenses');
+            const allExpenses = await new Promise((resolve) => {
+                const request = expStore.getAll();
+                request.onsuccess = () => resolve(request.filter(e => e.tripId === tripId));
+            });
+
+            const tripStore = db.transaction(['trips'], 'readonly').objectStore('trips');
+            const tripRequest = tripStore.get(tripId);
+            tripRequest.onsuccess = () => {
+                const trip = tripRequest.result;
+                const totalExpenses = allExpenses.reduce((sum, e) => sum + e.amount, 0);
+                
+                const personPaid = {};
+                trip.travelers.forEach(p => personPaid[p] = 0);
+                allExpenses.forEach(e => {
+                    personPaid[e.paidBy] = (personPaid[e.paidBy] || 0) + e.amount;
+                });
+
+                const perPersonShare = totalExpenses / trip.travelers.length;
+
+                document.getElementById('trip-total-expenses').textContent = '$' + totalExpenses.toFixed(2);
+                document.getElementById('trip-total-paid').textContent = '$' + totalExpenses.toFixed(2);
+
+                // Settlements
+                const settlementsContainer = document.getElementById('trip-settlements');
+                settlementsContainer.innerHTML = '';
+                
+                trip.travelers.forEach(person => {
+                    const paid = personPaid[person] || 0;
+                    const balance = paid - perPersonShare;
+                    if (Math.abs(balance) > 0.01) {
+                        const div = document.createElement('div');
+                        div.style.padding = '0.5rem';
+                        div.style.borderBottom = '1px solid var(--border)';
+                        div.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                                <span>${person}</span>
+                                <span style="font-weight:700; color:${balance > 0 ? 'var(--success)' : 'var(--danger)'}">
+                                    ${balance > 0 ? '+' : '-'}$${Math.abs(balance).toFixed(2)}
+                                </span>
+                            </div>
+                        `;
+                        settlementsContainer.appendChild(div);
+                    }
+                });
+                
+                if (settlementsContainer.children.length === 0) {
+                    settlementsContainer.innerHTML = '<div style="padding:0.5rem; font-size:0.85rem; color:var(--gray);">All settled up!</div>';
+                }
+            };
+        }
+
+        function addTripExpense() {
+            const desc = document.getElementById('trip-exp-desc').value;
+            const amount = parseFloat(document.getElementById('trip-exp-amount').value);
+            const paidBy = document.getElementById('trip-exp-paidby').value;
+            
+            const splitCheckboxes = document.querySelectorAll('#trip-exp-split input:checked');
+            const splitAmong = Array.from(splitCheckboxes).map(cb => cb.value);
+
+            if (!desc || !amount || !paidBy || splitAmong.length === 0) {
+                showToast('Please fill in all fields');
+                return;
+            }
+
+            const expense = {
+                tripId: selectedTripId,
+                description: desc,
+                amount,
+                paidBy,
+                splitAmong,
+                date: new Date().toISOString()
+            };
+
+            const expStore = db.transaction(['tripExpenses'], 'readwrite').objectStore('tripExpenses');
+            expStore.add(expense);
+            
+            document.getElementById('trip-exp-desc').value = '';
+            document.getElementById('trip-exp-amount').value = '';
+            
+            loadTripDetailData(selectedTripId);
+            loadTrips();
+            showToast('Expense added!');
+        }
+
+        // ============ UTILITIES ============
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        let fabMenuOpen = false;
+        function toggleFabMenu() {
+            fabMenuOpen = !fabMenuOpen;
+            document.getElementById('fab-menu').classList.toggle('open', fabMenuOpen);
+            document.getElementById('fab').textContent = fabMenuOpen ? '×' : '+';
+        }
+
+        // Close fab menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#fab') && !e.target.closest('#fab-menu') && fabMenuOpen) {
+                toggleFabMenu();
+            }
+        });
+
+        // PWA Install Prompt
+        function setupInstallPrompt() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('install-banner').style.display = 'flex';
+            });
+        }
+
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('install-banner').style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        }
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('SW registered', reg))
+                .catch(err => console.log('SW registration failed', err));
+        }
+    </script>
+</body>
+</html>
