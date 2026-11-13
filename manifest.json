@@ -2,7 +2,7 @@
   "name": "Vyuha Finance",
   "short_name": "Vyuha Finance",
   "description": "Personal financial management app for tracking savings, transactions, goals, and trip expenses",
-  "start_url": "./index.html",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#6366f1",
