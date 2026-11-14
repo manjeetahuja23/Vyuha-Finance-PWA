@@ -1,0 +1,15 @@
+# Sensitive data - never commit
+gmail_purchases_*.json
+*.json
+!manifest.json
+
+# Runtime artifacts
+server.log
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
