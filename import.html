@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vyuha PFM — Gmail Purchase Import</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #a7bfe8, #619aed); min-height: 100vh; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+        h1 { color: #1e293b; margin-bottom: 20px; font-size: 1.5rem; }
+        .card { background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .card h2 { color: #6366f1; font-size: 1.1rem; margin-bottom: 12px; }
+        input[type="file"] { margin: 10px 0; padding: 12px; border: 2px dashed #cbd5e1; border-radius: 8px; background: #fff; cursor: pointer; width: 100%; }
+        button { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
+        button:hover { background: #4f46e5; }
+        button:disabled { background: #94a3b8; cursor: not-allowed; }
+        .progress { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: #10b981; width: 0%; transition: width 0.3s; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .stat { background: #f1f5f9; padding: 12px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: #6366f1; display: block; }
+        .stat-label { font-size: 0.85rem; color: #64748b; }
+        .log { background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; max-height: 300px; overflow-y: auto; margin-top: 15px; }
+        .log-entry { margin-bottom: 6px; padding: 4px 0; border-bottom: 1px solid #334155; }
+        .success { color: #34d399; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        .btn-back { background: transparent; color: #64748b; border: 2px solid #cbd5e1; margin-top: 8px; }
+        .btn-back:hover { background: #f8fafc; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📥 Gmail Purchase Import</h1>
+
+        <div class="card">
+            <h2>1. Select File</h2>
+            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 12px;">Choose the cleaned purchases JSON file (INR, CAD, or merged)</p>
+            <input type="file" id="fileInput" accept=".json">
+            <div id="fileInfo" style="margin-top: 10px; color: #64748b; font-size: 0.85rem;"></div>
+        </div>
+
+        <div class="card">
+            <h2>2. Import</h2>
+            <button id="importBtn" disabled>Import Purchases</button>
+            <button class="btn-back" onclick="window.location.href='index.html'">← Back to App</button>
+            <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+            <div id="status" style="color: #64748b; font-size: 0.9rem; margin-top: 8px;"></div>
+            <div class="stats" id="stats" style="display:none;">
+                <div class="stat"><span class="stat-value" id="statTotal">0</span><span class="stat-label">Total</span></div>
+                <div class="stat"><span class="stat-value" id="statImported">0</span><span class="stat-label">Imported</span></div>
+                <div class="stat"><span class="stat-value" id="statSkipped">0</span><span class="stat-label">Skipped</span></div>
+                <div class="stat"><span class="stat-value" id="statErrors">0</span><span class="stat-label">Errors</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Log</h2>
+            <div class="log" id="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const DB_NAME = 'VyuhaFinanceDB';
+        const DB_VERSION = 1;
+
+        let db = null;
+        let purchases = [];
+        let imported = 0;
+        let skipped = 0;
+        let errors = 0;
+
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const importBtn = document.getElementById('importBtn');
+        const progressBar = document.getElementById('progressBar');
+        const status = document.getElementById('status');
+        const log = document.getElementById('log');
+        const stats = document.getElementById('stats');
+
+        function addLog(msg, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            fileInfo.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            importBtn.disabled = false;
+
+            try {
+                const text = await file.text();
+                purchases = JSON.parse(text);
+                addLog(`Loaded ${purchases.length} purchases from ${file.name}`, 'success');
+                status.textContent = `Ready to import ${purchases.length} purchases`;
+            } catch (err) {
+                addLog(`Error parsing JSON: ${err.message}`, 'error');
+                importBtn.disabled = true;
+            }
+        });
+
+        importBtn.addEventListener('click', async () => {
+            importBtn.disabled = true;
+            fileInput.disabled = true;
+
+            try {
+                await initDB();
+                await bulkImport();
+            } catch (err) {
+                addLog(`Import failed: ${err.message}`, 'error');
+                importBtn.disabled = false;
+                fileInput.disabled = false;
+            }
+        });
+
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    addLog('Connected to Vyuha Finance IndexedDB', 'success');
+                    resolve();
+                };
+                request.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains('purchases')) {
+                        database.createObjectStore('purchases', { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+            });
+        }
+
+        async function bulkImport() {
+            stats.style.display = 'grid';
+            imported = 0;
+            skipped = 0;
+            errors = 0;
+
+            addLog(`Starting import of ${purchases.length} purchases...`);
+
+            for (let i = 0; i < purchases.length; i++) {
+                const p = purchases[i];
+                const progress = ((i + 1) / purchases.length) * 100;
+                progressBar.style.width = `${progress}%`;
+
+                try {
+                    // Map JSON fields to app's purchase format
+                    const purchase = {
+                        merchant: p.merchant || 'Unknown',
+                        amount: parseFloat(p.amount) || 0,
+                        category: p.category || 'Other',
+                        paymentMethod: p.paymentMethod || 'Unknown',
+                        description: p.description || '',
+                        date: p.date || new Date().toISOString().split('T')[0],
+                        notes: p.notes || '',
+                        createdAt: p.createdAt || new Date().toISOString(),
+                        currency: p.currency || 'INR'
+                    };
+
+                    // Skip if missing critical fields
+                    if (!purchase.merchant || !purchase.amount) {
+                        skipped++;
+                        continue;
+                    }
+
+                    const tx = db.transaction(['purchases'], 'readwrite');
+                    const store = tx.objectStore('purchases');
+                    store.add(purchase);
+
+                    await new Promise((resolve, reject) => {
+                        tx.oncomplete = resolve;
+                        tx.onerror = () => reject(tx.error);
+                    });
+
+                    imported++;
+
+                    if ((i + 1) % 50 === 0 || (i + 1) === purchases.length) {
+                        status.textContent = `Imported ${i + 1}/${purchases.length}...`;
+                        document.getElementById('statTotal').textContent = purchases.length;
+                        document.getElementById('statImported').textContent = imported;
+                        document.getElementById('statSkipped').textContent = skipped;
+                        document.getElementById('statErrors').textContent = errors;
+                    }
+                } catch (err) {
+                    errors++;
+                    if (errors <= 5) {
+                        addLog(`Error on item ${i + 1}: ${err.message}`, 'error');
+                    }
+                }
+            }
+
+            progressBar.style.width = '100%';
+            status.textContent = `Import complete: ${imported} imported, ${skipped} skipped, ${errors} errors`;
+            addLog(`Import complete: ${imported} imported, ${skipped} skipped, ${errors} errors`, 'success');
+            importBtn.disabled = false;
+            fileInput.disabled = false;
+        }
+    </script>
+</body>
+</html>
