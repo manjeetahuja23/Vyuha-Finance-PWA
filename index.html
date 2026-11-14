@@ -148,6 +148,14 @@
             border-bottom-color: var(--primary);
         }
 
+        nav button.nav-item {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.75rem;
+            font: inherit;
+        }
+
         .nav-item img {
             width: 24px;
             height: 24px;
@@ -800,6 +808,10 @@
                 <img src="assets/icons/shopping-nav.svg" alt="Purchases Icon" width="24" height="24">
                 <span>Purchases</span>
             </a>
+            <button class="nav-item" onclick="refreshApp()" title="Refresh">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M23 4v6h-6'/%3E%3Cpath d='M1 20v-6h6'/%3E%3Cpath d='M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15'/%3E%3C/svg%3E" alt="Refresh Icon" width="24" height="24">
+                <span>Refresh</span>
+            </button>
         </nav>
 
         <!-- Dashboard Section -->
@@ -1349,6 +1361,13 @@
             if (sectionId === 'savings') loadSavings();
             if (sectionId === 'trips') loadTrips();
             if (sectionId === 'purchases') loadPurchases();
+        }
+
+        function refreshApp() {
+            showToast('Refreshing...');
+            setTimeout(() => {
+                location.reload();
+            }, 500);
         }
 
         // ============ TRANSACTIONS ============
